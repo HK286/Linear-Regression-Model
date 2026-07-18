@@ -1,0 +1,74 @@
+import random
+
+
+class LinearRegressionScratch:
+    def __init__(self, learning_rate=0.01, n_iterations=1000, verbose=False):
+        self.lr = learning_rate
+        self.n_iterations = n_iterations
+        self.verbose = verbose
+        self.w = 0.0
+        self.b = 0.0
+        self.loss_history = []
+
+    def fit(self, X, y):
+        # X: list of numbers (single feature), y: list of numbers
+        n = len(X)
+        self.w = 0.0
+        self.b = 0.0
+
+        for i in range(self.n_iterations):
+            # Predictions
+            y_pred = [self.w * X[j] + self.b for j in range(n)]
+
+            # Errors
+            errors = [y_pred[j] - y[j] for j in range(n)]
+
+            # Loss (MSE)
+            loss = sum(e ** 2 for e in errors) / n
+            self.loss_history.append(loss)
+
+            # Gradients
+            dw = (2 / n) * sum(errors[j] * X[j] for j in range(n))
+            db = (2 / n) * sum(errors)
+
+            # Update parameters
+            self.w -= self.lr * dw
+            self.b -= self.lr * db
+
+            if self.verbose and i % (self.n_iterations // 10 or 1) == 0:
+                print("Iteration {:5d} | Loss: {:.6f}".format(i, loss))
+
+        return self
+
+    def predict(self, X):
+        if isinstance(X, (int, float)):
+            return self.w * X + self.b
+        return [self.w * x + self.b for x in X]
+
+    def score(self, X, y):
+        # R^2 score
+        y_pred = self.predict(X)
+        mean_y = sum(y) / len(y)
+        ss_res = sum((y[j] - y_pred[j]) ** 2 for j in range(len(y)))
+        ss_tot = sum((y[j] - mean_y) ** 2 for j in range(len(y)))
+        return 1 - (ss_res / ss_tot)
+
+
+if __name__ == "__main__":
+    # ---- Demo on a simple synthetic dataset (no numpy needed) ----
+    random.seed(42)
+
+    true_w, true_b = 3.5, 7.0
+    X = [i * 0.2 for i in range(50)]          # 0, 0.2, 0.4, ... up to 10
+    y = [true_w * x + true_b + random.uniform(-2, 2) for x in X]
+
+    model = LinearRegressionScratch(learning_rate=0.01, n_iterations=1000, verbose=True)
+    model.fit(X, y)
+
+    print("\nLearned weight :", model.w)
+    print("Learned bias   :", model.b)
+    print("R^2 score      :", model.score(X, y))
+
+    # Predict a new value
+    test_x = 12
+    print("\nPrediction for x=12: {:.3f}".format(model.predict(test_x)))
